@@ -1,7 +1,7 @@
 int input_pin = 2;
 int led_pin = 3;
-boolean marantzIsOn;
-boolean marantzGotSwitchedOff = false;
+boolean AppleTvIsOn;
+boolean AppleTvGotSwitchedOff = false;
 
 byte leds = 0;
 
@@ -15,13 +15,13 @@ void setup() {
 
 void loop() {
   if (ActiveMode() == true){
-    monitorMarantz(0);
-    if (marantzIsOn == true){
-    monitorMarantz(1);
+    monitorAppleTv(0);
+    if (AppleTvIsOn == true){
+    monitorAppleTv(1);
     }
-    if (marantzGotSwitchedOff == true){
+    if (AppleTvGotSwitchedOff == true){
       switchOffTV();
-      marantzGotSwitchedOff = false;
+      AppleTvGotSwitchedOff = false;
     }
   }
 }
@@ -47,30 +47,34 @@ void statusLED(boolean led){
   }*/
 }
 
-void monitorMarantz(int marantzStatus){
+void monitorAppleTv(int AppleTvStatus){
   delay(1000);
-  if (marantzStatus == 0){                     //Wenn du meinst, dass der Marantz aus ist, schau, ob der input pin doch HIGH ist. Wenn ja, setze den marantzison auf true
-      Serial.println("Checking Marantz status...");                   
-      if(digitalRead(input_pin) == HIGH){     //check input pin
-        Serial.println("Marantz is ON");
-        marantzIsOn = true;
+  if (AppleTvStatus == 0){                     //Wenn du meinst, dass der AppleTv aus ist, schau, ob der input pin doch HIGH ist. Wenn ja, setze den AppleTvison auf true
+      Serial.println("Checking AppleTv status...");                   
+      if(statusLedOn() == true){     //check LED
+        Serial.println("AppleTv is ON");
+        AppleTvIsOn = true;
         return;
       }
   }
-  if (marantzStatus == 1){                    //Wenn du weisst, dass der Marantz an ist, dann schau, ob der input pin auf low geht.
+  if (AppleTvStatus == 1){                    //Wenn du weisst, dass der AppleTv an ist, dann schau, ob der input pin auf low geht.
     Serial.println("Entering ON Mode.");
-    while (marantzStatus == 1){
-      Serial.println("Checking if Marantz got switched off...");
-      if(digitalRead(input_pin) == LOW){      //check input pin
-        marantzIsOn = false;
-        marantzGotSwitchedOff = true;
-        marantzStatus = 0;
-        Serial.println("Marantz appears to be offline now.");
+    while (AppleTvStatus == 1){
+      Serial.println("Checking if AppleTv got switched off...");
+      if(statusLedOn() == false){      //check LED
+        AppleTvIsOn = false;
+        AppleTvGotSwitchedOff = true;
+        AppleTvStatus = 0;
+        Serial.println("AppleTv appears to be offline now.");
       }
       delay(1000);
     }
   }
 
+}
+
+boolean statusLedOn(){
+    
 }
 
 void switchOffTV(){
