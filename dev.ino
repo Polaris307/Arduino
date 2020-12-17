@@ -1,12 +1,16 @@
+#include<BH1750FVI.h>
+#include<HardwareSerial.h>
+
 int input_pin = 2;
 int led_pin = 3;
 boolean AppleTvIsOn;
 boolean AppleTvGotSwitchedOff = false;
-
 byte leds = 0;
+BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
 
 void setup() {
   Serial.begin(115200);
+  LightSensor.begin();
   pinMode(input_pin, INPUT);
   pinMode(led_pin, OUTPUT);
   Serial.println("initialized program");
@@ -17,7 +21,7 @@ void loop() {
   if (ActiveMode() == true){
     monitorAppleTv(0);
     if (AppleTvIsOn == true){
-    monitorAppleTv(1);
+      monitorAppleTv(1);
     }
     if (AppleTvGotSwitchedOff == true){
       switchOffTV();
@@ -74,7 +78,26 @@ void monitorAppleTv(int AppleTvStatus){
 }
 
 boolean statusLedOn(){
-    
+  int repeats = 0;
+
+  while(repeats<=20){
+    uint16_t lux = LightSensor.GetLightIntensity();
+
+    if(lux>100){
+      repeats = 0;
+      Serial.println("Light level is too high, Apple tv seems to be on");
+      return true;
+    }
+    else if(repeats>=20){
+      repeats = 0;
+      Serial.println("Apple TV LED has been off for quite some time now. It seems to be off");
+      return false;
+    }
+    else{
+      repeats++;
+      delay(100);
+    }
+  }
 }
 
 void switchOffTV(){
