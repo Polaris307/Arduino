@@ -1,12 +1,22 @@
 #include<BH1750FVI.h>
 #include<HardwareSerial.h>
 
+BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
+
+//ANPASSBARE VARIABLEN
+
+int ledThreshold = 100; //Wie hell muss die LED sein um als "an" zu gelten?
+int ledOffTime = 1000;  //Wie lange soll der Arduino bis zur nächsten Messung warten?
+int ledRepeats = 10;    //Wie oft soll der Arduino Messen? ledRepeats*ledOffTime = So lange muss LED aus sein, dass der Fernseher abgestellt wird.
+int powerSave = 10000;  //Wie lange soll zwischen Messungen gewartet werden, wenn der AppleTV aus ist? 
+
+//GLOBALE VARIABLEN
+
 int input_pin = 2;
 int led_pin = 3;
 boolean AppleTvIsOn;
 boolean AppleTvGotSwitchedOff = false;
 byte leds = 0;
-BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
 
 void setup() {
   Serial.begin(115200);
@@ -29,6 +39,8 @@ void loop() {
     }
   }
 }
+
+//FUNKTIONEN
 
 boolean ActiveMode(){
   return true;/*
@@ -53,9 +65,9 @@ void statusLED(boolean led){
 
 void monitorAppleTv(int AppleTvStatus){
   delay(1000);
-  if (AppleTvStatus == 0){                     //Wenn du meinst, dass der AppleTv aus ist, schau, ob der input pin doch HIGH ist. Wenn ja, setze den AppleTvison auf true
+  if (AppleTvStatus == 0){                     //Wenn du meinst, dass der AppleTv aus ist, schau, ob der input pin doch HIGH ist. Wenn ja, setze den AppleTvIson auf true
       Serial.println("Checking AppleTv status...");                   
-      if(statusLedOn() == true){     //check LED
+      if(statusLedOn() == true){               //check LED
         Serial.println("AppleTv is ON");
         AppleTvIsOn = true;
         return;
@@ -65,7 +77,7 @@ void monitorAppleTv(int AppleTvStatus){
     Serial.println("Entering ON Mode.");
     while (AppleTvStatus == 1){
       Serial.println("Checking if AppleTv got switched off...");
-      if(statusLedOn() == false){      //check LED
+      if(statusLedOn() == false){             //check LED
         AppleTvIsOn = false;
         AppleTvGotSwitchedOff = true;
         AppleTvStatus = 0;
@@ -79,25 +91,33 @@ void monitorAppleTv(int AppleTvStatus){
 
 boolean statusLedOn(){
   int repeats = 0;
-
-  while(repeats<=20){
+  int repeatStore = ledRepeats;
+  if(AppleTvIsOn==false){
+      Serial.println("Apple TV is off, waiting with measurement.");
+      ledRepeats=5;
+      delay(powerSave);
+  }
+  while(repeats<=ledRepeats){
     uint16_t lux = LightSensor.GetLightIntensity();
 
-    if(lux>100){
+    if(lux>ledThreshold){
       repeats = 0;
-      Serial.println("Light level is too high, Apple tv seems to be on");
+      Serial.println("Light level is high, Apple tv seems to be on");
       return true;
     }
-    else if(repeats>=20){
+    else if(repeats>=ledRepeats){
       repeats = 0;
       Serial.println("Apple TV LED has been off for quite some time now. It seems to be off");
       return false;
-    }
+      }
     else{
       repeats++;
-      delay(100);
-    }
+      delay(ledOffTime);
+      }
+    ledRepeats=repeatStore;
   }
+
+
 }
 
 void switchOffTV(){
