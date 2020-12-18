@@ -62,8 +62,9 @@ void monitorAppleTv(int AppleTvStatus){         //Diese Funktion übernimmt die 
         AppleTvGotSwitchedOff = true;
         AppleTvStatus = 0;
         Serial.println("AppleTv appears to be offline now.");
+        return;
       }
-      delay(1000);
+      delay(powerSave);                         //Wenn du weisst, dass der AppleTv an ist, miss weniger oft, um Energie zu sparen und den Sensor abkühlen zu lassen.
     }
   }
 
@@ -73,7 +74,7 @@ boolean statusLedOn(){                          //Ist die LED am Apple TV an? (T
   int repeats = 0;
   int repeatStore = ledRepeats;                 //"Store"-Variablen speichern die Thresholdwerte, welche im Falle eines ausgeschalteten Apple TVs überschrieben werden.
   int offStore = ledOffTime;                    //Die Thresholdwerte werden wieder zurückgesetzt, wenn der Messzyklus vorbei ist oder die LED an ist.
-  if(AppleTvIsOn==false){                       //Wenn du weisst, dass der AppleTv aus ist, Miss weniger oft, um Energie zu sparen und den Sensor abkühlen zu lassen.
+  if(AppleTvIsOn==false){                       //Wenn du weisst, dass der AppleTv aus ist, miss weniger oft, um Energie zu sparen und den Sensor abkühlen zu lassen.
       Serial.println("Apple TV is off, waiting with measurement.");               
       ledRepeats=10;
       ledOffTime=500;
