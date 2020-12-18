@@ -6,13 +6,13 @@ BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
 //ANPASSBARE VARIABLEN
 
 int ledThreshold = 100; //Wie hell muss die LED sein um als "an" zu gelten?
-int ledOffTime = 1000;  //Wie lange soll der Arduino bis zur nächsten Messung warten?
-int ledRepeats = 10;    //Wie oft soll der Arduino Messen? ledRepeats*ledOffTime = So lange muss LED aus sein, dass der Fernseher abgestellt wird.
-int powerSave = 10000;  //Wie lange soll zwischen Messungen gewartet werden, wenn der AppleTV aus ist? 
+int ledOffTime = 50;    //Wie lange soll der Arduino bis zur nächsten Messung warten?
+int ledRepeats = 400;   //Wie oft soll der Arduino Messen? ledRepeats*ledOffTime = So lange (in ms) muss LED aus sein, dass der Fernseher abgestellt wird.
+int powerSave = 10000;   //Wie lange soll zwischen Messungen gewartet werden, wenn der AppleTV aus ist? 
 
 //GLOBALE VARIABLEN
 
-int input_pin = 2;
+int switch_pin = 2;
 int led_pin = 3;
 boolean AppleTvIsOn;
 boolean AppleTvGotSwitchedOff = false;
@@ -21,14 +21,13 @@ byte leds = 0;
 void setup() {
   Serial.begin(115200);
   LightSensor.begin();
-  pinMode(input_pin, INPUT);
+  pinMode(switch_pin, INPUT);
   pinMode(led_pin, OUTPUT);
   Serial.println("initialized program");
   digitalWrite(led_pin, LOW);
 }
 
 void loop() {
-  if (ActiveMode() == true){
     monitorAppleTv(0);
     if (AppleTvIsOn == true){
       monitorAppleTv(1);
@@ -37,31 +36,9 @@ void loop() {
       switchOffTV();
       AppleTvGotSwitchedOff = false;
     }
-  }
 }
 
 //FUNKTIONEN
-
-boolean ActiveMode(){
-  return true;/*
-  if(digitalRead(input_pin) == HIGH){
-    statusLED(true);
-    return(true);
-  }
-  else if(digitalRead(switch_pin) == LOW){
-    statusLED(false);
-    return(false);
-  }
-}
-
-void statusLED(boolean led){
-  if(led == true){
-    digitalWrite(led_pin, HIGH);
-  }
-  else{
-    digitalWrite(led_pin, LOW);
-  }*/
-}
 
 void monitorAppleTv(int AppleTvStatus){
   delay(1000);
@@ -92,29 +69,35 @@ void monitorAppleTv(int AppleTvStatus){
 boolean statusLedOn(){
   int repeats = 0;
   int repeatStore = ledRepeats;
+  int offStore = ledOffTime;
   if(AppleTvIsOn==false){
       Serial.println("Apple TV is off, waiting with measurement.");
-      ledRepeats=5;
+      ledRepeats=10;
+      ledOffTime=500;
       delay(powerSave);
   }
   while(repeats<=ledRepeats){
     uint16_t lux = LightSensor.GetLightIntensity();
-
+                              Serial.print("Measured Light Level: ");
+                              Serial.println(lux);
     if(lux>ledThreshold){
       repeats = 0;
       Serial.println("Light level is high, Apple tv seems to be on");
+      ledRepeats=repeatStore;
+      ledOffTime=offStore;
       return true;
     }
     else if(repeats>=ledRepeats){
       repeats = 0;
       Serial.println("Apple TV LED has been off for quite some time now. It seems to be off");
+      ledRepeats=repeatStore;
+      ledOffTime=offStore;
       return false;
       }
     else{
       repeats++;
       delay(ledOffTime);
       }
-    ledRepeats=repeatStore;
   }
 
 
