@@ -93,7 +93,7 @@ boolean statusLedOn(){                          //Ist die LED am Apple TV an? (T
     }
     else if(repeats>=ledRepeats){               //Wenn LED über gesamten Messzeitraum aus ist, returne false. (StatusLED nicht "on")
       repeats = 0;
-      Serial.println("Apple TV LED has been off for quite some time now. It seems to be off");
+      Serial.println("Apple TV LED has been off for quite some time now. Apple TV seems to be off");
       ledRepeats=repeatStore;
       ledOffTime=offStore;
       return false;
