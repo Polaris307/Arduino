@@ -5,8 +5,4 @@ This Device switches off an LG TV based on the status of a trigger out on an amp
 
 ## Hardware
 
-The Hardware is based off **Arduino** and is therefore open source. The plans will be available on this page.
-
-## Software
-
-Software is developed by Andrin Walla.
+The Hardware is based off **Arduino**.
